@@ -2,8 +2,7 @@ $key="YOUR_KEY"
 $endpoint="YOUR_ENDPOINT"
 
 
-
-# Code to call Face service for face detection
+# Code to call OCR service for text in image analysis
 $img_file = "img1.jpg"
 if ($args.count -gt 0 -And $args[0] -in ("img1.jpg", "img2.jpg", "img3.jpg"))
 {
@@ -20,12 +19,16 @@ $body = "{'url' : '$img'}"
 
 write-host "Analyzing image...`n"
 $result = Invoke-RestMethod -Method Post `
-          -Uri "$endpoint/face/v1.0/detect?detectionModel=detection_01&returnFaceId=true&returnFaceAttributes=age,smile,facialHair,glasses,emotion,hair,makeup,accessories" `
+          -Uri "$endpoint/vision/v3.2/ocr?language=en&detectOrientation=true&model-version=latest" `
           -Headers $headers `
-          -Body $body | ConvertTo-Json -Depth 5
+          -Body $body | ConvertTo-Json -Depth 6
 
 $analysis = ($result | ConvertFrom-Json)
-foreach ($face in $analysis)
+
+foreach ($listofdict in $analysis.regions.lines.words)
 {
-    Write-Host("Face location: $($face.faceRectangle)`n - Age:$($face.faceAttributes.age)`n - Emotions: $($face.faceAttributes.emotion)`n")
+    foreach($dict in $listofdict)
+    {
+        Write-Host ("Text:", $($dict.text), "| Text Bounding Box:", $($dict.boundingBox))
+    }
 }
